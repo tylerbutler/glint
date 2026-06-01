@@ -37,6 +37,17 @@ pub fn empty_glint_documents_empty_tree_test() {
   |> should.equal([])
 }
 
+pub fn with_name_sets_root_tree_name_test() {
+  let tree =
+    glint.new()
+    |> glint.with_name("myapp")
+    |> glint.add(at: [], do: nil_command())
+    |> glint.document
+
+  tree.meta.name
+  |> should.equal("myapp")
+}
+
 pub fn root_command_documents_help_flags_and_defaults_test() {
   let count =
     glint.int_flag("count")

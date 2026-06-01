@@ -678,7 +678,11 @@ pub fn default_pretty_help() -> PrettyHelp {
 /// rather than any runtime-supplied values.
 ///
 pub fn document(glint: Glint(a)) -> pub_help.Tree {
-  build_command_tree("", glint.cmd, new_flags())
+  build_command_tree(
+    option.unwrap(glint.config.name, ""),
+    glint.cmd,
+    new_flags(),
+  )
 }
 
 /// generate the help text for a command
