@@ -775,8 +775,8 @@ fn build_command_tree(
     },
     unnamed_args: option.map(unnamed_args, fn(args) {
       case args {
-        EqArgs(n) -> help.EqArgs(n)
-        MinArgs(n) -> help.MinArgs(n)
+        EqArgs(n) -> pub_help.EqArgs(n)
+        MinArgs(n) -> pub_help.MinArgs(n)
       }
     }),
     named_args: named_args,

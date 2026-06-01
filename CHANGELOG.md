@@ -4,10 +4,17 @@
 
 - added the `glint.document/1` accessor and the public `glint/help` module,
   exposing a recursive `Tree` view of the command graph for downstream
-  documentation generators (closes #49)
+  documentation generators (closes #49). `glint/help.ArgsCount` is declared
+  as a fresh public type with `EqArgs`/`MinArgs` constructors so that
+  downstream documentation tools never need to import `glint/internal/help`
 - captured each flag's configured default value in the help data
   (`help.Flag.default`) and added the `glint.show_flag_defaults` builder
   to opt in to rendering `(default: <value>)` in `--help` output
+- added the companion `glint_markdown` subpackage (in `./glint_markdown/`),
+  a Markdown documentation generator built on top of `glint.document/1`
+  and modelled after [oclif's readme generator][oclif-readme]
+
+[oclif-readme]: https://github.com/oclif/oclif/blob/main/src/readme-generator.ts
 
 # v1
 

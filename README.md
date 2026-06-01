@@ -302,3 +302,5 @@ The public help types expose these fields:
 - `help.Flag(meta: help.Metadata, type_: String, default: Option(String))`
 
 Flag defaults are also surfaced in `--help` output when you opt in with `glint.show_flag_defaults(True)`.
+
+For ready-made Markdown output, see the companion [`glint_markdown`](./glint_markdown/) subpackage in this repo. It consumes `glint.document/1` and renders single-file or one-file-per-topic Markdown, with oclif-style sentinel-comment injection.

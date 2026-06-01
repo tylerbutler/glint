@@ -5,7 +5,7 @@ import glint/internal/help as internal
 
 pub fn public_help_types_can_be_constructed_test() {
   let meta: help.Metadata = internal.Metadata("root", "Root command")
-  let unnamed_args: help.ArgsCount = internal.MinArgs(1)
+  let unnamed_args: help.ArgsCount = help.MinArgs(1)
   let flag = help.Flag(meta: meta, type_: "String", default: Some("default"))
   let tree =
     help.Tree(
