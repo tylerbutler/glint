@@ -68,6 +68,9 @@ let opts =
 // Pure: caller is responsible for writing them to disk.
 let files = glint_markdown.to_files(tree, opts)
 
+// Root command body to inject into your main README.
+let root = glint_markdown.to_root_body(tree, opts)
+
 // Index body to inject into your main README between sentinel comments.
 let index = glint_markdown.to_topics_index_body(tree, opts)
 ```
@@ -81,6 +84,9 @@ content between them on every release. Mirrors oclif's `replaceTag`:
 <!-- toc -->
 <!-- tocstop -->
 
+<!-- root -->
+<!-- rootstop -->
+
 ## Commands
 
 <!-- commands -->
@@ -89,12 +95,23 @@ content between them on every release. Mirrors oclif's `replaceTag`:
 
 ```gleam
 let readme = read_existing_readme()
+
+// Single-file mode: inject the generated TOC and command sections.
 let updated =
   readme
   |> glint_markdown.inject("toc", glint_markdown.to_toc_body(tree, opts))
   |> glint_markdown.inject(
     "commands",
     glint_markdown.to_commands_body(tree, opts),
+  )
+
+// Multi-file mode: inject root docs and a topic-file index.
+let updated =
+  readme
+  |> glint_markdown.inject("root", glint_markdown.to_root_body(tree, opts))
+  |> glint_markdown.inject(
+    "commands",
+    glint_markdown.to_topics_index_body(tree, opts),
   )
 ```
 

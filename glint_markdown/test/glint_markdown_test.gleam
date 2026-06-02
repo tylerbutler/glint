@@ -114,6 +114,26 @@ pub fn to_toc_body_lists_every_command_test() {
   |> should.be_true
 }
 
+pub fn to_root_body_renders_only_root_command_docs_test() {
+  let tree = glint.document(sample_app())
+  let body = glint_markdown.to_root_body(tree, glint_markdown.options("myapp"))
+
+  string.contains(body, "## `myapp`")
+  |> should.be_true
+
+  string.contains(body, "Top-level command")
+  |> should.be_true
+
+  string.contains(body, "`--verbose`")
+  |> should.be_true
+
+  string.contains(body, "**Subcommands:**")
+  |> should.be_true
+
+  string.contains(body, "## `myapp serve`")
+  |> should.be_false
+}
+
 // ---------------------------------------------------------------------------
 // inject (oclif replaceTag analogue)
 // ---------------------------------------------------------------------------

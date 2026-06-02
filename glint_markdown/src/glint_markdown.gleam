@@ -16,10 +16,16 @@
 ////   |> io.println
 ////
 ////   // Or inject into an existing README between sentinel comments:
+////   //     <!-- root -->
+////   //     <!-- rootstop -->
 ////   //     <!-- commands -->
 ////   //     <!-- commandsstop -->
-////   let body = glint_markdown.to_commands_body(tree, options)
-////   let updated = glint_markdown.inject(existing_readme, "commands", body)
+////   let root = glint_markdown.to_root_body(tree, options)
+////   let commands = glint_markdown.to_topics_index_body(tree, options)
+////   let updated =
+////     existing_readme
+////     |> glint_markdown.inject("root", root)
+////     |> glint_markdown.inject("commands", commands)
 //// }
 //// ```
 ////
@@ -126,6 +132,15 @@ pub fn to_commands_body(tree: Tree, opts: Options) -> String {
 pub fn to_toc_body(tree: Tree, opts: Options) -> String {
   flatten(tree, opts)
   |> render_toc
+}
+
+/// Render only the root command section for injection into an existing README.
+///
+/// This is useful with [`Multi`](#Mode) mode, where per-topic files start at
+/// top-level subcommands and therefore do not include the root command's
+/// description, usage, flags, or subcommand list.
+pub fn to_root_body(tree: Tree, opts: Options) -> String {
+  render_entry(Entry(path: [opts.bin], tree: tree), opts)
 }
 
 // ---------------------------------------------------------------------------
