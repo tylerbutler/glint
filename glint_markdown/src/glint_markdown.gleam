@@ -167,7 +167,7 @@ pub fn to_files(tree: Tree, opts: Options) -> Dict(String, String) {
 }
 
 /// Render the body for `<!-- commands -->` when using [`Multi`](#Mode) mode —
-/// a `## Command Topics` heading followed by a bulleted index linking each
+/// a `# Subcommands` heading followed by a bulleted index linking each
 /// topic file produced by [`to_files`](#to_files).
 pub fn to_topics_index_body(tree: Tree, opts: Options) -> String {
   let dir = case opts.mode {
@@ -192,8 +192,8 @@ pub fn to_topics_index_body(tree: Tree, opts: Options) -> String {
     })
     |> string.join("\n")
   case bullets {
-    "" -> "# Command Topics"
-    _ -> "# Command Topics\n\n" <> bullets
+    "" -> "# Subcommands"
+    _ -> "# Subcommands\n\n" <> bullets
   }
 }
 
