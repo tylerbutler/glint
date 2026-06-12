@@ -49,6 +49,7 @@ pub type Config {
     column_gap: Int,
     flag_prefix: String,
     flag_delimiter: String,
+    show_flag_defaults: Bool,
   )
 }
 
@@ -208,7 +209,15 @@ fn flags_help_to_string(help: List(Flag), config: Config) -> String {
   let content =
     to_spaced_indented_string(
       [help_flag, ..help],
-      fn(help) { #(flag_help_to_string(help, config), help.meta.description) },
+      fn(help) {
+        let description = case config.show_flag_defaults, help.default {
+          True, Some(default) ->
+            help.meta.description <> " (default: " <> default <> ")"
+          _, _ -> help.meta.description
+        }
+
+        #(flag_help_to_string(help, config), description)
+      },
       longest_flag_length,
       config,
     )

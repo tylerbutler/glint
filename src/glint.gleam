@@ -29,6 +29,7 @@ type Config {
     max_output_width: Int,
     min_first_column_width: Int,
     column_gap: Int,
+    show_flag_defaults: Bool,
   )
 }
 
@@ -52,6 +53,7 @@ const default_config = Config(
   max_output_width: 80,
   min_first_column_width: 20,
   column_gap: 2,
+  show_flag_defaults: False,
 )
 
 // -- CONFIGURATION: FUNCTIONS --
@@ -125,6 +127,15 @@ pub fn with_min_first_column_width(
 ///
 pub fn with_column_gap(glint: Glint(a), column_gap: Int) -> Glint(a) {
   Glint(..glint, config: Config(..glint.config, column_gap:))
+}
+
+/// Enable rendering of flag default values in `--help` output. When enabled,
+/// each flag with a configured default has `(default: <value>)` appended to
+/// its description.
+///
+/// Disabled by default to preserve existing help text formatting.
+pub fn show_flag_defaults(glint: Glint(a), enabled: Bool) -> Glint(a) {
+  Glint(..glint, config: Config(..glint.config, show_flag_defaults: enabled))
 }
 
 // --- CORE ---
@@ -682,6 +693,7 @@ fn build_help_config(config: Config) -> help.Config {
     column_gap: config.column_gap,
     flag_prefix: flag_prefix,
     flag_delimiter: flag_delimiter,
+    show_flag_defaults: config.show_flag_defaults,
   )
 }
 
