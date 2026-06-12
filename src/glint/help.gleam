@@ -1,8 +1,9 @@
 //// Stable, public introspection API for glint command trees.
 ////
-//// This module exposes the shared public help types (`Metadata`, `Flag`,
-//// and `ArgsCount`) used when rendering help text and, in future, when
-//// auto-generating reference documentation from a command tree.
+//// This module is intended for tools that auto-generate reference
+//// documentation from a command tree, such as Markdown, JSON, manpages, or
+//// other formats. Use `glint.document/1` as the entry point for producing
+//// these public help values.
 
 import gleam/option.{type Option}
 
@@ -27,4 +28,14 @@ pub type ArgsCount {
 
 pub type Flag {
   Flag(meta: Metadata, type_: String, default: Option(String))
+}
+
+pub type Tree {
+  Tree(
+    meta: Metadata,
+    flags: List(Flag),
+    subcommands: List(Tree),
+    unnamed_args: Option(ArgsCount),
+    named_args: List(String),
+  )
 }

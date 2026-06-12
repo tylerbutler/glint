@@ -668,6 +668,23 @@ pub fn default_pretty_help() -> PrettyHelp {
 
 // -- HELP: FUNCTIONS --
 
+/// Returns a recursive, structured view of the entire command tree, suitable
+/// for downstream tools that auto-generate reference documentation (Markdown,
+/// JSON, manpages, etc.). See the [`glint/help`](./glint/help.html) module
+/// for the shape of the returned tree.
+///
+/// The tree is taken from the `Glint` builder before execution, so flag
+/// `default` values reflect the values configured via `glint.flag_default`
+/// rather than any runtime-supplied values.
+///
+pub fn document(glint: Glint(a)) -> pub_help.Tree {
+  build_command_tree(
+    option.unwrap(glint.config.name, ""),
+    glint.cmd,
+    new_flags(),
+  )
+}
+
 /// generate the help text for a command
 fn cmd_help(path: List(String), cmd: CommandNode(a), config: Config) -> String {
   // recreate the path of the current command
@@ -730,6 +747,43 @@ fn to_help_args(args: Option(ArgsCount)) -> Option(pub_help.ArgsCount) {
     EqArgs(n) -> pub_help.EqArgs(n)
     MinArgs(n) -> pub_help.MinArgs(n)
   }
+}
+
+/// build the recursive doc tree for the entire command subtree.
+/// Mirrors `build_command_help` but populates `subcommands` recursively
+/// rather than as flat `List(Metadata)`. Used by the public `document` accessor.
+///
+/// `inherited_group_flags` accumulates ancestor group flags so that leaf
+/// commands surface the same effective flag set the runtime resolver applies
+/// in `do_execute` (which propagates `cmd.group_flags` into descendants).
+fn build_command_tree(
+  name: String,
+  node: CommandNode(_),
+  inherited_group_flags: Flags,
+) -> pub_help.Tree {
+  let effective_group_flags = merge(inherited_group_flags, node.group_flags)
+  let #(description, flags, unnamed_args, named_args) =
+    node.contents
+    |> option.map(fn(cmd) {
+      #(
+        node.description,
+        build_flags(merge(effective_group_flags, cmd.flags)),
+        cmd.unnamed_args,
+        cmd.named_args,
+      )
+    })
+    |> option.unwrap(#(node.description, [], None, []))
+
+  pub_help.Tree(
+    meta: pub_help.Metadata(name: name, description: description),
+    flags: flags,
+    subcommands: {
+      use acc, sub_name, sub_node <- dict.fold(node.subcommands, [])
+      [build_command_tree(sub_name, sub_node, effective_group_flags), ..acc]
+    },
+    unnamed_args: to_help_args(unnamed_args),
+    named_args: named_args,
+  )
 }
 
 /// generate the string representation for the type of a flag
