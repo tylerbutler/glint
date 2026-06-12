@@ -5,6 +5,9 @@ import gleam/option.{type Option, None, Some}
 import gleam/string
 import gleam_community/ansi
 import gleam_community/colour.{type Colour}
+import glint/help.{
+  type ArgsCount, type Flag, type Metadata, EqArgs, Flag, Metadata, MinArgs,
+}
 import glint/internal/utils
 
 /// Style heading text with the provided rgb colouring
@@ -30,11 +33,6 @@ const usage_heading = "USAGE:"
 
 // --- HELP: TYPES ---
 
-pub type ArgsCount {
-  MinArgs(Int)
-  EqArgs(Int)
-}
-
 pub type Config {
   Config(
     name: Option(String),
@@ -51,18 +49,6 @@ pub type Config {
     flag_delimiter: String,
     show_flag_defaults: Bool,
   )
-}
-
-/// Common metadata for commands and flags
-///
-pub type Metadata {
-  Metadata(name: String, description: String)
-}
-
-/// Help type for flag metadata
-///
-pub type Flag {
-  Flag(meta: Metadata, type_: String, default: Option(String))
 }
 
 /// Help type for command metadata
