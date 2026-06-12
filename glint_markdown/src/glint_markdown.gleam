@@ -41,7 +41,6 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 import glint/help.{type Flag, type Tree}
-import glugify
 
 // ---------------------------------------------------------------------------
 // Options
@@ -335,12 +334,16 @@ fn render_usage(entry: Entry, _opts: Options) -> String {
     entry.tree.named_args
     |> list.map(fn(n) { "<" <> n <> ">" })
     |> string.join(" ")
-  let unnamed = case entry.tree.unnamed_args {
-    Some(help.EqArgs(0)) -> ""
-    Some(help.EqArgs(1)) -> "[1 argument]"
-    Some(help.EqArgs(n)) -> "[" <> int.to_string(n) <> " arguments]"
-    Some(help.MinArgs(n)) -> "[" <> int.to_string(n) <> " or more arguments]"
-    None -> "[ARGS]"
+  let unnamed = case entry.tree.unnamed_args, entry.tree.subcommands {
+    Some(help.EqArgs(0)), _ -> ""
+    Some(help.EqArgs(1)), _ -> "[1 argument]"
+    Some(help.EqArgs(n)), _ -> "[" <> int.to_string(n) <> " arguments]"
+    Some(help.MinArgs(n)), _ -> "[" <> int.to_string(n) <> " or more arguments]"
+    // `None` means the command accepts an unconstrained number of unnamed
+    // args. Surface that for leaf commands, but suppress it for pure
+    // group/dispatch nodes (which have subcommands) where `[ARGS]` is noise.
+    None, [] -> "[ARGS]"
+    None, _ -> ""
   }
   let subs = case entry.tree.subcommands {
     [] -> ""
@@ -415,7 +418,7 @@ fn render_flag_row(flag: Flag) -> String {
   <> " |"
 }
 
-fn render_subcommands_list(entry: Entry, _opts: Options) -> String {
+fn render_subcommands_list(entry: Entry, opts: Options) -> String {
   case entry.tree.subcommands {
     [] -> ""
     subs -> {
@@ -431,10 +434,29 @@ fn render_subcommands_list(entry: Entry, _opts: Options) -> String {
             "" -> ""
             s -> " - " <> s
           }
-          "- [" <> label <> "](#" <> slugify(sub_title) <> ")" <> suffix
+          let target = subcommand_link_target(entry, sub, opts)
+          "- [" <> label <> "](" <> target <> ")" <> suffix
         })
         |> string.join("\n")
       "**Subcommands:**\n\n" <> items
+    }
+  }
+}
+
+/// Resolve the link target for a subcommand listed under `entry`.
+///
+/// In [`Multi`](#Mode) mode the root command's direct subcommands are rendered
+/// into their own `dir/<name>.md` topic files (see [`to_files`](#to_files)), so
+/// they must be linked as file paths rather than in-page anchors. Every other
+/// case — single-file output, and nested subcommands within a topic file —
+/// renders in the same document, so an in-page heading anchor is correct.
+fn subcommand_link_target(entry: Entry, sub: Tree, opts: Options) -> String {
+  let is_root = entry.path == [opts.bin]
+  case opts.mode, is_root {
+    Multi(output_dir: dir), True -> dir <> "/" <> sub.meta.name <> ".md"
+    _, _ -> {
+      let sub_title = string.join(list.append(entry.path, [sub.meta.name]), " ")
+      "#" <> slugify(sub_title)
     }
   }
 }
@@ -480,8 +502,41 @@ fn escape_table_cell(s: String) -> String {
   |> string.replace("\n", " ")
 }
 
-/// GitHub-style anchor slug, delegating to the
-/// [`glugify`](https://hex.pm/packages/glugify) library.
+/// GitHub-style heading anchor slug.
+///
+/// Implements GitHub's heading-anchor algorithm directly (rather than using a
+/// general-purpose slug library) so the generated anchors match the `##`
+/// headings exactly: lowercase the text, drop every character that is not
+/// alphanumeric, a space, a hyphen, or an underscore, then turn spaces into
+/// hyphens. Notably underscores are preserved — a general slugifier would
+/// rewrite them to hyphens and produce dead links for command names like
+/// `do_thing`.
 fn slugify(s: String) -> String {
-  glugify.slugify(s)
+  s
+  |> string.lowercase
+  |> string.to_graphemes
+  |> list.filter_map(fn(g) {
+    case g {
+      " " -> Ok("-")
+      "-" | "_" -> Ok(g)
+      _ ->
+        case is_ascii_alphanumeric(g) {
+          True -> Ok(g)
+          False -> Error(Nil)
+        }
+    }
+  })
+  |> string.join("")
+}
+
+fn is_ascii_alphanumeric(g: String) -> Bool {
+  case string.to_utf_codepoints(g) {
+    [codepoint] -> {
+      let code = string.utf_codepoint_to_int(codepoint)
+      { code >= 48 && code <= 57 }
+      || { code >= 97 && code <= 122 }
+      || { code >= 65 && code <= 90 }
+    }
+    _ -> False
+  }
 }

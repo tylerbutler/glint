@@ -233,3 +233,83 @@ pub fn to_topics_index_body_links_to_topic_files_test() {
   string.contains(index, "docs/user.md")
   |> should.be_true
 }
+
+// ---------------------------------------------------------------------------
+// Anchor slugs (GitHub heading-anchor algorithm)
+// ---------------------------------------------------------------------------
+
+fn underscore_app() -> glint.Glint(Nil) {
+  glint.new()
+  |> glint.add(at: [], do: nil_command())
+  |> glint.add(at: ["do_thing"], do: {
+    use <- glint.command_help("Does the thing")
+    nil_command()
+  })
+}
+
+pub fn slugify_preserves_underscores_in_anchor_links_test() {
+  let tree = glint.document(underscore_app())
+  let out = glint_markdown.to_string(tree, glint_markdown.options("myapp"))
+
+  // The heading is `## ` + "`myapp do_thing`", so GitHub's anchor preserves
+  // the underscore: `myapp-do_thing`. The TOC / subcommand links must target
+  // that exact anchor — a general slugifier would emit `myapp-do-thing`.
+  string.contains(out, "## `myapp do_thing`")
+  |> should.be_true
+
+  string.contains(out, "(#myapp-do_thing)")
+  |> should.be_true
+
+  string.contains(out, "(#myapp-do-thing)")
+  |> should.be_false
+}
+
+// ---------------------------------------------------------------------------
+// Usage rendering: unnamed-args token
+// ---------------------------------------------------------------------------
+
+pub fn usage_suppresses_args_token_for_group_nodes_test() {
+  let tree = glint.document(sample_app())
+  let out = glint_markdown.to_string(tree, glint_markdown.options("myapp"))
+
+  // Leaf commands accept unconstrained args, so `[ARGS]` is still shown.
+  string.contains(out, "myapp serve [ARGS]")
+  |> should.be_true
+
+  // The `user` node is a pure group (dispatches to `create`); `[ARGS]` would
+  // be noise there, so it is suppressed.
+  string.contains(out, "(create) [ARGS]")
+  |> should.be_false
+}
+
+// ---------------------------------------------------------------------------
+// Multi-mode root body links to topic files (not in-page anchors)
+// ---------------------------------------------------------------------------
+
+pub fn to_root_body_links_subcommands_to_topic_files_in_multi_mode_test() {
+  let tree = glint.document(sample_app())
+  let opts =
+    glint_markdown.options("myapp")
+    |> glint_markdown.with_mode(glint_markdown.Multi(output_dir: "docs"))
+  let body = glint_markdown.to_root_body(tree, opts)
+
+  // Top-level subcommands live in their own files in Multi mode, so the root
+  // body's Subcommands list must link to those files...
+  string.contains(body, "](docs/serve.md)")
+  |> should.be_true
+
+  string.contains(body, "](docs/user.md)")
+  |> should.be_true
+
+  // ...not in-page anchors that don't exist on the README page.
+  string.contains(body, "(#myapp-serve)")
+  |> should.be_false
+}
+
+pub fn to_root_body_uses_in_page_anchors_in_single_mode_test() {
+  let tree = glint.document(sample_app())
+  let body = glint_markdown.to_root_body(tree, glint_markdown.options("myapp"))
+
+  string.contains(body, "(#myapp-serve)")
+  |> should.be_true
+}

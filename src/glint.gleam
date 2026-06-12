@@ -771,7 +771,7 @@ fn build_command_tree(
     |> option.unwrap(#(node.description, [], None, []))
 
   pub_help.Tree(
-    meta: help.Metadata(name: name, description: description),
+    meta: pub_help.Metadata(name: name, description: description),
     flags: flags,
     subcommands: {
       use acc, sub_name, sub_node <- dict.fold(node.subcommands, [])
@@ -838,7 +838,7 @@ fn build_flags_tree(flags: Flags) -> List(pub_help.Flag) {
   use acc, name, flag <- fold(flags, [])
   [
     pub_help.Flag(
-      meta: help.Metadata(name: name, description: flag.description),
+      meta: pub_help.Metadata(name: name, description: flag.description),
       type_: flag_type_info(flag),
       default: flag_default_info(flag),
     ),

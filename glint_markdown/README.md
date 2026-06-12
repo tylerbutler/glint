@@ -123,8 +123,6 @@ are inserted after it.
 
 - [`glint`](https://hex.pm/packages/glint) — the introspection API
   (`glint.document/1`, `glint/help`).
-- [`glugify`](https://hex.pm/packages/glugify) — GitHub-style anchor slugs for
-  the table of contents and cross-links.
 
 ## License
 

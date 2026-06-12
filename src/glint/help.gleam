@@ -6,10 +6,16 @@
 //// these public help values.
 
 import gleam/option.{type Option}
-import glint/internal/help as internal
 
-pub type Metadata =
-  internal.Metadata
+/// Metadata shared by commands and flags: the `name` used in usage text and
+/// headings, plus a human-readable `description`.
+///
+/// Re-declared as a fresh public type (rather than aliasing
+/// `glint/internal/help.Metadata`) so downstream tools can both read and
+/// construct `Metadata` values without importing `glint/internal/help`.
+pub type Metadata {
+  Metadata(name: String, description: String)
+}
 
 /// Number of unnamed positional arguments accepted by a command.
 ///
@@ -21,12 +27,12 @@ pub type ArgsCount {
 }
 
 pub type Flag {
-  Flag(meta: internal.Metadata, type_: String, default: Option(String))
+  Flag(meta: Metadata, type_: String, default: Option(String))
 }
 
 pub type Tree {
   Tree(
-    meta: internal.Metadata,
+    meta: Metadata,
     flags: List(Flag),
     subcommands: List(Tree),
     unnamed_args: Option(ArgsCount),
