@@ -9,6 +9,7 @@ import gleam/result
 import gleam/string
 import gleam_community/colour.{type Colour}
 import glint/constraint
+import glint/help as pub_help
 import glint/internal/help
 import snag.{type Snag}
 
@@ -705,7 +706,7 @@ fn build_command_help(name: String, node: CommandNode(_)) -> help.Command {
     |> option.map(fn(cmd) {
       #(
         node.description,
-        build_flags_help(merge(node.group_flags, cmd.flags)),
+        build_flags(merge(node.group_flags, cmd.flags)),
         cmd.unnamed_args,
         cmd.named_args,
       )
@@ -713,18 +714,22 @@ fn build_command_help(name: String, node: CommandNode(_)) -> help.Command {
     |> option.unwrap(#(node.description, [], None, []))
 
   help.Command(
-    meta: help.Metadata(name: name, description: description),
+    meta: pub_help.Metadata(name: name, description: description),
     flags: flags,
     subcommands: build_subcommands_help(node.subcommands),
-    unnamed_args: {
-      use args <- option.map(unnamed_args)
-      case args {
-        EqArgs(n) -> help.EqArgs(n)
-        MinArgs(n) -> help.MinArgs(n)
-      }
-    },
+    unnamed_args: to_help_args(unnamed_args),
     named_args: named_args,
   )
+}
+
+/// remap an internal `ArgsCount` to the public `help.ArgsCount`.
+///
+fn to_help_args(args: Option(ArgsCount)) -> Option(pub_help.ArgsCount) {
+  use args <- option.map(args)
+  case args {
+    EqArgs(n) -> pub_help.EqArgs(n)
+    MinArgs(n) -> pub_help.MinArgs(n)
+  }
 }
 
 /// generate the string representation for the type of a flag
@@ -764,13 +769,14 @@ fn join_csv(items: List(a), to_string: fn(a) -> String) -> String {
   items |> list.map(to_string) |> string.join(",")
 }
 
-/// build the help representation for a list of flags
+/// build the public flag representation for a list of flags.
+/// Shared by both `--help` rendering and the `document` doc tree.
 ///
-fn build_flags_help(flags: Flags) -> List(help.Flag) {
+fn build_flags(flags: Flags) -> List(pub_help.Flag) {
   use acc, name, flag <- fold(flags, [])
   [
-    help.Flag(
-      meta: help.Metadata(name: name, description: flag.description),
+    pub_help.Flag(
+      meta: pub_help.Metadata(name: name, description: flag.description),
       type_: flag_type_info(flag),
       default: flag_default_info(flag),
     ),
@@ -782,9 +788,9 @@ fn build_flags_help(flags: Flags) -> List(help.Flag) {
 ///
 fn build_subcommands_help(
   subcommands: dict.Dict(String, CommandNode(_)),
-) -> List(help.Metadata) {
+) -> List(pub_help.Metadata) {
   use acc, name, node <- dict.fold(subcommands, [])
-  [help.Metadata(name: name, description: node.description), ..acc]
+  [pub_help.Metadata(name: name, description: node.description), ..acc]
 }
 
 // ----- FLAGS -----
